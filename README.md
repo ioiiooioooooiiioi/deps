@@ -8,10 +8,10 @@ A Python tool for generating Mermaid.js dependency diagrams from a TypeScript/Ja
 ## Usage
 
 ```bash
-python main.py /path/to/your/project > diagram.mmd
+python main.py /path/to/your/project > diagram.md
 ```
 
-Then open `diagram.mmd` in a Mermaid viewer/editor to visualize your dependency graph.
+Then open `diagram.md` in a Mermaid viewer/editor to visualize your dependency graph.
 
 ## Example Output
 ```mermaid
