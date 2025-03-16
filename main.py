@@ -50,10 +50,6 @@ def build_dependency_graph(
             dependencies = get_typescript_dependencies(file_path)
 
             for dep in dependencies:
-                # No longer necessary, handled by is_allowed
-                # if "node_modules" in dep:
-                #     continue
-
                 if dep.startswith("."):
                     absolute_dep_path = (file_path.parent / dep).resolve()
                     found_dep_path = find_actual_file(
