@@ -5,6 +5,7 @@ from typing import List, Dict, Tuple
 
 
 def get_typescript_dependencies(file_path: Path) -> List[str]:
+    """Extracts import dependencies from a TypeScript/JavaScript file."""
     dependencies = []
     try:
         content = file_path.read_text(encoding="utf-8")
@@ -23,10 +24,9 @@ def get_typescript_dependencies(file_path: Path) -> List[str]:
     return dependencies
 
 
-def is_allowed(file_path: Path, file_extensions) -> bool:
-    if [
-        name for name in file_path.parts if name == "node_modules"
-    ]:  # @todo: move to config
+def is_allowed(file_path: Path, file_extensions: Tuple[str, ...]) -> bool:
+    """Checks if a file should be included in the dependency graph."""
+    if any(part == "node_modules" for part in file_path.parts):
         return False
     if file_path.suffix not in file_extensions:
         return False
@@ -37,6 +37,7 @@ def build_dependency_graph(
     project_path: str,
     file_extensions: Tuple[str, ...],
 ) -> Dict[str, List[str]]:
+    """Builds a dependency graph for a TypeScript/JavaScript project."""
     graph = {}
     project_path_obj = Path(project_path)
     src_path_obj = project_path_obj / "src"  # @todo: make it configurable
@@ -49,8 +50,9 @@ def build_dependency_graph(
             dependencies = get_typescript_dependencies(file_path)
 
             for dep in dependencies:
-                if "node_modules" in dep:
-                    continue
+                # No longer necessary, handled by is_allowed
+                # if "node_modules" in dep:
+                #     continue
 
                 if dep.startswith("."):
                     absolute_dep_path = (file_path.parent / dep).resolve()
@@ -79,6 +81,7 @@ def build_dependency_graph(
 
 
 def find_actual_file(base_path: Path, extensions: Tuple[str, ...]) -> Path | None:
+    """Resolves import paths, handling missing extensions and directory imports."""
     if base_path.exists():
         if base_path.is_file():
             return base_path
@@ -96,6 +99,7 @@ def find_actual_file(base_path: Path, extensions: Tuple[str, ...]) -> Path | Non
 
 
 def generate_mermaid(graph: Dict[str, List[str]]) -> str:
+    """Generates a Mermaid diagram from a dependency graph."""
     mermaid_code = "graph LR\n"
     for file, dependencies in graph.items():
         file_node = file.replace(".", "_").replace("/", "_").replace("-", "_")
@@ -106,16 +110,19 @@ def generate_mermaid(graph: Dict[str, List[str]]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("project_path", type=Path)
-
+    """Generates a Mermaid dependency diagram for a TypeScript/JavaScript project."""
+    parser = argparse.ArgumentParser(
+        description="Generate a Mermaid dependency diagram for a TypeScript/JavaScript project."
+    )
+    parser.add_argument(
+        "project_path", type=Path, help="The path to the project root directory."
+    )
     args = parser.parse_args()
 
-    project_path = args.project_path
+    project_path: Path = args.project_path
+    file_extensions = (".ts", ".tsx", ".js", ".jsx")
 
-    file_extensions = (".ts", ".tsx", ".js", ".jsx")  # @todo: read from config
-
-    graph = build_dependency_graph(project_path, file_extensions)
+    graph = build_dependency_graph(str(project_path), file_extensions)
     mermaid = generate_mermaid(graph)
     print(mermaid)
 
