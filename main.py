@@ -90,7 +90,7 @@ def save_to(content: str, path: Path) -> None:
         mmd.write(content)
         mmd.flush()
 
-        config.write('{"maxTextSize": 1000000000}')
+        config.write('{"maxTextSize": 1000000000, "maxEdges": 1000000000}')
         config.flush()
 
         subprocess.run(
