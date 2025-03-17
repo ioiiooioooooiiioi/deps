@@ -3,12 +3,11 @@ import re
 from pathlib import Path
 import subprocess
 from tempfile import NamedTemporaryFile
-from typing import List, Dict
 
 FILE_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx")
 
 
-def extract_imports(file_content: str) -> List[str]:
+def extract_imports(file_content: str) -> list[str]:
     """Extract dependencies from file content."""
     pattern = re.compile(
         r'^\s*(?!//)(?:import(?:[\s,{]+[\w*{}\s,]*?)?\sfrom\s|import\()\s*[\'"]([^\'"]+)[\'"]',
@@ -38,7 +37,7 @@ def resolve_path(import_path: str, current_file: Path, root: Path) -> Path | Non
     return None
 
 
-def build_dependency_graph(project_root: Path) -> Dict[str, List[str]]:
+def build_dependency_graph(project_root: Path) -> dict[str, list[str]]:
     """Create a dependency graph."""
     graph = {}
     files = [
@@ -61,7 +60,7 @@ def build_dependency_graph(project_root: Path) -> Dict[str, List[str]]:
     return graph
 
 
-def to_mermaid(graph: Dict[str, List[str]]) -> str:
+def to_mermaid(graph: dict[str, list[str]]) -> str:
     """Convert dependency graph to Mermaid format."""
 
     def sanitize(s: str) -> str:
