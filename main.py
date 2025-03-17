@@ -76,7 +76,13 @@ def to_mermaid(graph: dict[str, list[str]]) -> str:
     """Convert dependency graph to Mermaid format."""
 
     def sanitize(s: str) -> str:
-        return s.replace(".", "_").replace("/", "_").replace("-", "_")
+        return (
+            s.replace(".", "_")
+            .replace("/", "_")
+            .replace("-", "_")
+            .replace("[", "_")
+            .replace("]", "_")
+        )
 
     lines = ["graph LR"]
     for src, targets in graph.items():
