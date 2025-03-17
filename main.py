@@ -37,8 +37,11 @@ def resolve_path(import_path: str, current_file: Path, root: Path) -> Path | Non
     return None
 
 
-def build_dependency_graph(project_root: Path) -> dict[str, list[str]]:
-    """Create a dependency graph."""
+def build_dependency_graph(
+    project_root: Path,
+    blacklist: list[str],
+) -> dict[str, list[str]]:
+    """Create a dependency graph, excluding blacklisted files."""
     graph = {}
     files = [
         f
@@ -48,13 +51,22 @@ def build_dependency_graph(project_root: Path) -> dict[str, list[str]]:
 
     for file_path in files:
         rel_file = str(file_path.relative_to(project_root))
+
+        # --- Blacklist Check (File Level) ---
+        if rel_file in blacklist:
+            continue  # Skip this file entirely
+
         imports = extract_imports(file_path.read_text("utf-8"))
 
         resolved_imports = []
         for imp in imports:
             imp_path = resolve_path(imp, file_path, project_root)
             if imp_path and project_root in imp_path.parents:
-                resolved_imports.append(str(imp_path.relative_to(project_root)))
+                resolved_import_path = str(imp_path.relative_to(project_root))
+
+                # --- Blacklist Check (Dependency Level) ---
+                if resolved_import_path not in blacklist:
+                    resolved_imports.append(resolved_import_path)
 
         graph[rel_file] = resolved_imports
     return graph
@@ -102,9 +114,17 @@ def main():
     parser = argparse.ArgumentParser(description="Generate Mermaid dependency diagram.")
     parser.add_argument("project_path", type=Path, help="Path to project root")
     parser.add_argument("-o", "--output", type=Path, help="Output file path")
+    parser.add_argument(
+        "-b",
+        "--blacklist",
+        type=str,
+        help="Blacklist files (comma-separated)",
+        default="",
+    )
     args = parser.parse_args()
 
-    graph = build_dependency_graph(args.project_path)
+    blacklist = args.blacklist.split(",") if args.blacklist else []
+    graph = build_dependency_graph(args.project_path, blacklist)
     output = to_mermaid(graph)
     if args.output:
         save_to(output, args.output)
