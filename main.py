@@ -75,9 +75,12 @@ def to_mermaid(graph: Dict[str, List[str]]) -> str:
 
 
 def save_to(content: str, path: Path) -> None:
-    with NamedTemporaryFile("w") as tmp:
-        tmp.write(content)
-        tmp.flush()
+    with NamedTemporaryFile("w") as mmd, NamedTemporaryFile("w") as config:
+        mmd.write(content)
+        mmd.flush()
+
+        config.write('{"maxTextSize": 1000000000}')
+        config.flush()
 
         subprocess.run(
             [
@@ -87,9 +90,11 @@ def save_to(content: str, path: Path) -> None:
                 "@mermaid-js/mermaid-cli",
                 "mmdc",
                 "-i",
-                tmp.name,
+                mmd.name,
                 "-o",
                 str(path),
+                "-c",
+                config.name,
             ]
         )
 
