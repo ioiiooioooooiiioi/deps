@@ -1,7 +1,9 @@
 import argparse
 import re
 from pathlib import Path
-from typing import List, Dict, Tuple
+import subprocess
+from tempfile import NamedTemporaryFile
+from typing import List, Dict
 
 FILE_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx")
 
@@ -65,13 +67,38 @@ def to_mermaid(graph: Dict[str, List[str]]) -> str:
     return "\n".join(lines)
 
 
+def save_to(content: str, path: Path) -> None:
+    with NamedTemporaryFile("w") as tmp:
+        tmp.write(content)
+        tmp.flush()
+
+        subprocess.run(
+            [
+                "npx",
+                "-y",
+                "-p",
+                "@mermaid-js/mermaid-cli",
+                "mmdc",
+                "-i",
+                tmp.name,
+                "-o",
+                str(path),
+            ]
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate Mermaid dependency diagram.")
     parser.add_argument("project_path", type=Path, help="Path to project root")
+    parser.add_argument("-o", "--output", type=Path, help="Output file path")
     args = parser.parse_args()
 
     graph = build_dependency_graph(args.project_path)
-    print(to_mermaid(graph))
+    output = to_mermaid(graph)
+    if args.output:
+        save_to(output, args.output)
+    else:
+        print(output)
 
 
 if __name__ == "__main__":
