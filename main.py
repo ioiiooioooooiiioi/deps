@@ -19,7 +19,14 @@ def extract_imports(file_content: str) -> List[str]:
 
 def resolve_path(import_path: str, current_file: Path, root: Path) -> Path | None:
     """Resolve import path relative to current file or src root."""
-    base = current_file.parent if import_path.startswith(".") else root / "src"
+    if import_path.startswith("."):
+        base = current_file.parent
+    elif import_path.startswith("@/"):
+        base = root / "src"
+        import_path = import_path[2:]  # Remove the "@/"
+    else:
+        base = root / "src"  # Default to src for non-relative, non-aliased imports
+
     potential_paths = [
         base / import_path,
         *(base / f"{import_path}{ext}" for ext in FILE_EXTENSIONS),
